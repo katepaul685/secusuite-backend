@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecuSuite Platform</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* =====================================
+           GLOBAL STYLES & BACKGROUND
+        ===================================== */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #333; /* Fallback color if image fails */
+            background-image: url("background.jpg"); /* Make sure you have this image! */
+            background-size: cover;
+            background-attachment: fixed;
+            color: white;
+        }
+
+        /* =====================================
+           LOGIN & CREATE ACCOUNT FORM
+        ===================================== */
+        .form-container {
+            width: 330px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.92);
+            margin: 120px auto;
+            border-radius: 10px;
+            text-align: center;
+            color: black;
+        }
+
+        .input-field {
+            width: 90%; /* Adjusted padding safe width */
+            padding: 12px;
+            margin-bottom: 14px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px;
+        }
+
+        .action-btn:hover {
+            background: #45a049;
+        }
+
+        .link, .small-link a {
+            margin-top: 14px;
+            display: block;
+            color: blue;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .link:hover, .small-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* =====================================
+           LOGO & TOP NAVIGATION
+        ===================================== */
+        .logo-container {
+            text-align: center;
+            background: rgba(0,0,0,0.95);
+            padding: 10px 0;
+        }
+
+        .logo-text {
+            color: white;
+            font-size: 28px;
+            margin: 0;
+            font-weight: bold;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(0,0,0,0.9);
+            padding: 12px 0;
+            z-index: 1000;
+        }
+
+        .top-nav a, .top-nav .logout-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .top-nav a:hover, .top-nav .logout-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* =====================================
+           MAIN PAGES
+        ===================================== */
+        .page {
+            display: none;
+            margin: 20px;
+            padding: 25px;
+            color: white;
+        }
+
+        /* =====================================
+           DASHBOARD CARDS
+        ===================================== */
+        .card-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: rgba(0,0,0,0.6);
+            padding: 20px;
+            border-radius: 10px;
+            width: 220px;
+            color: white;
+        }
+
+        /* ALERT COLORS */
+        .alert {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-top: 10px;
+        }
+
+        .good { background: green; }
+        .moderate { background: yellow; animation: blinkModerate 1.5s infinite; }
+        .critical { background: red; animation: blinkCritical 0.8s infinite; }
+
+        @keyframes blinkModerate { 50% { opacity: 0; } }
+        @keyframes blinkCritical { 50% { opacity: 0; } }
+
+        /* =====================================
+           THREAT MONITOR
+        ===================================== */
+        #threatChart {
+            background: white;
+            padding: 12px;
+            border-radius: 10px;
+            width: 600px;
+            height: 350px;
+        }
+
+        /* =====================================
+           LOG ANALYSIS
+        ===================================== */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.1);
+            transition: background 0.2s ease;
+            color: white;
+        }
+
+        .upload-area:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* =====================================
+           SETTINGS
+        ===================================== */
+        #settings input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        /* =====================================
+           ABOUT US POPUP
+        ===================================== */
+        .about-us {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+            width: 250px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .about-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page" class="form-container">
+    <h2>Login</h2>
+    <input id="username" class="input-field" type="text" placeholder="Username">
+    <input id="password" class="input-field" type="password" placeholder="Password">
+    <button class="action-btn" onclick="login()">Login</button>
+    <a class="link" onclick="showCreateAccount()">Create Account</a>
+</div>
+
+<!-- CREATE ACCOUNT PAGE -->
+<div id="create-page" class="form-container" style="display:none;">
+    <h2>Create Account</h2>
+    <input id="new-username" class="input-field" type="text" placeholder="Choose Username">
+    <input id="new-password" class="input-field" type="password" placeholder="Choose Password (min 10 chars)">
+    <input id="confirm-password" class="input-field" type="password" placeholder="Confirm Password">
+    <button class="action-btn" onclick="createAccount()">Create Account</button>
+    <a class="link" onclick="showLogin()">Back to Login</a>
+</div>
+
+<!-- LOGO & TOP NAV -->
+<div id="main-content" style="display:none;">
+    <div class="logo-container">
+        <h1 class="logo-text">SecuSuite</h1>
+    </div>
+
+    <div class="top-nav">
+        <a onclick="openPage('dashboard')">Dashboard</a>
+        <a onclick="openPage('logs')">Log Analysis</a>
+        <a onclick="openPage('monitor')">Threat Monitor</a>
+        <!-- NEW AI BUTTON -->
+        <a onclick="openPage('grc')">AI Policy Copilot</a> 
+        <a onclick="openPage('settings')">Settings</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="page">
+        <h1>Dashboard</h1>
+        <div class="card-row">
+            <div class="card">
+                <h3>System Health</h3>
+                <p id="health-text">Good</p>
+                <div id="health-alert" class="alert good"></div>
+            </div>
+            <div class="card">
+                <h3>Active Threats</h3>
+                <p id="threat-count">0</p>
+            </div>
+            <div class="card">
+                <h3>Logs Processed</h3>
+                <p id="logs-count">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG ANALYSIS -->
+    <div id="logs" class="page">
+        <h1>Log Analysis</h1>
+        <div class="upload-area" id="upload-area">
+            <p>Drag & Drop files here</p>
+            <p>or</p>
+            <button class="action-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+            <input type="file" id="file-input" multiple>
+            <button id="upload-btn" class="action-btn" style="display:none;" onclick="uploadFiles()">Analyze File</button>
+        </div>
+    </div>
+
+    <!-- THREAT MONITOR -->
+    <div id="monitor" class="page">
+        <h1>Threat Monitor</h1>
+        <canvas id="threatChart"></canvas>
+    </div>
+
+    <!-- GRC AI MODULE (NEW) -->
+    <div id="grc" class="page">
+        <h1>AI Policy Copilot</h1>
+        <p>Describe your organization, and our AI will generate a security policy for you.</p>
+        
+        <div style="background: rgba(0,0,0,0.6); padding: 20px; border-radius: 10px;">
+            <textarea id="policy-prompt" rows="4" style="width: 95%; padding: 10px; font-size: 16px; border-radius: 6px;" placeholder="e.g., I run a fintech startup with 10 employees handling credit card data..."></textarea>
+            <br><br>
+            <button class="action-btn" onclick="generatePolicy()">Generate Policy</button>
+        </div>
+
+        <div id="policy-result" style="display:none; margin-top: 20px; background: white; color: black; padding: 20px; border-radius: 10px; white-space: pre-wrap;">
+            <!-- AI text appears here -->
+        </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="page">
+        <h1>Settings</h1>
+        <p>API Key:</p>
+        <input type="text" id="api-input" placeholder="Enter your API key">
+    </div>
+</div>
+
+<!-- ABOUT US POPUP -->
+<div class="about-us" id="about-us">
+    <h3>About SecuSuite</h3>
+    <p>SecuSuite is a security monitoring platform.</p>
+    <button onclick="closeAbout()">Close</button>
+</div>
+<button class="about-btn" onclick="showAbout()">About Us</button>
+
+<script>
+/* =========================
+   BACKEND CONNECTION (API)
+========================= */
+const API_URL = "http://127.0.0.1:5000/api";
+
+let activeThreats = 0;
+let logsProcessed = 0;
+
+/* =========================
+   USER LOGIN / ACCOUNT
+========================= */
+function showCreateAccount() {
+    document.getElementById("login-page").style.display = "none";
+    document.getElementById("create-page").style.display = "block";
+}
+function showLogin() {
+    document.getElementById("login-page").style.display = "block";
+    document.getElementById("create-page").style.display = "none";
+}
+
+// 1. CREATE ACCOUNT (Connects to Backend)
+async function createAccount() {
+    const user = document.getElementById("new-username").value;
+    const pass = document.getElementById("new-password").value;
+    const confirm = document.getElementById("confirm-password").value;
+
+    if(pass !== confirm) return alert("Passwords do not match!");
+
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert("Account created! Please login.");
+            showLogin();
+        } else {
+            alert("Error: " + (data.error || "Unknown error"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Server connection failed. Is python running?");
+    }
+}
+
+// 2. LOGIN (Connects to Backend)
+async function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            localStorage.setItem("token", data.token); // Save the key!
+            document.getElementById("login-page").style.display = "none";
+            document.getElementById("create-page").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+            updateDashboard();
+            openPage("dashboard");
+        } else {
+            alert(data.error || "Login failed");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Server connection failed. Is python running?");
+    }
+}
+
+function logout() {
+    localStorage.removeItem("token");
+    location.reload();
+}
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
+function openPage(page) {
+    document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+    document.getElementById(page).style.display = "block";
+    if(page === "monitor") loadGraph();
+}
+
+/* =========================
+   DASHBOARD UPDATE
+========================= */
+function updateDashboard() {
+    document.getElementById("logs-count").innerText = logsProcessed;
+    document.getElementById("threat-count").innerText = activeThreats;
+
+    const healthText = document.getElementById("health-text");
+    const healthAlert = document.getElementById("health-alert");
+
+    if(activeThreats < 5) {
+        healthText.innerText = "Good";
+        healthAlert.className = "alert good";
+    } else if(activeThreats <= 10) {
+        healthText.innerText = "Moderate";
+        healthAlert.className = "alert moderate";
+    } else {
+        healthText.innerText = "Critical";
+        healthAlert.className = "alert critical";
+    }
+}
+
+/* =========================
+   LOG ANALYSIS (FILE UPLOAD)
+========================= */
+const uploadArea = document.getElementById("upload-area");
+const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
+
+fileInput.addEventListener("change", () => {
+    if(fileInput.files.length > 0) uploadBtn.style.display = "block";
+});
+
+// 3. UPLOAD FILES (Connects to Backend)
+async function uploadFiles() {
+    const files = fileInput.files;
+    if(!files.length) return alert("No files selected!");
+
+    const formData = new FormData();
+    formData.append("file", files[0]);
+
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/logs/upload`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+        });
+
+        const result = await response.json();
+        
+        if(response.ok) {
+            activeThreats = result.data.threats;
+            logsProcessed += 1;
+            updateDashboard();
+            alert(`Analysis Complete: Status is ${result.data.status}`);
+            fileInput.value = "";
+            uploadBtn.style.display = "none";
+        } else {
+            alert("Upload failed: " + result.error);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Upload error.");
+    }
+}
+
+/* Drag & Drop */
+uploadArea.addEventListener("dragover", e => e.preventDefault());
+uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    fileInput.files = e.dataTransfer.files; // Assign dropped files to input
+    if(fileInput.files.length > 0) uploadBtn.style.display = "block";
+});
+
+/* =========================
+   AI POLICY GENERATION
+========================= */
+// 4. GENERATE POLICY (Connects to Backend AI)
+async function generatePolicy() {
+    const prompt = document.getElementById("policy-prompt").value;
+    const resultBox = document.getElementById("policy-result");
+    
+    if(!prompt) return alert("Please describe your company first.");
+
+    resultBox.style.display = "block";
+    resultBox.innerText = "Generating policy... please wait (this calls Google Gemini)...";
+
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/grc/generate-policy`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            },
+            body: JSON.stringify({ company_description: prompt })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            resultBox.innerHTML = `<h3>Generated Policy</h3><hr>${data.policy}`; // Note: using data.policy based on routes
+        } else {
+            resultBox.innerText = "Error: " + (data.error || "AI failed to respond");
+        }
+    } catch (error) {
+        console.error(error);
+        resultBox.innerText = "Connection failed.";
+    }
+}
+
+/* =========================
+   THREAT MONITOR
+========================= */
+function loadGraph() {
+    const ctx = document.getElementById("threatChart");
+    // Destroy old chart if exists to avoid glitches
+    if (window.myChart) window.myChart.destroy();
+    
+    window.myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: ["1 pm","2 pm","3 pm","4 pm","5 pm"],
+            datasets: [{
+                label: "Threat Activity",
+                data: [2,6,3,7,4],
+                borderColor: "red",
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: { responsive:true }
+    });
+}
+
+/* =========================
+   ABOUT US POPUP
+========================= */
+function showAbout() { document.getElementById("about-us").style.display = "block"; }
+function closeAbout() { document.getElementById("about-us").style.display = "none"; }
+</script>
+
+</body>
+</html>
