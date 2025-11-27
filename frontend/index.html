@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SecuSuite Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login-page" class="form-container">
+    <h2>Login</h2>
+    <input id="username" class="input-field" type="text" placeholder="Username">
+    <input id="password" class="input-field" type="password" placeholder="Password">
+    <button class="action-btn" onclick="login()">Login</button>
+    <a class="link" onclick="showCreateAccount()">Create Account</a>
+</div>
+
+<!-- CREATE ACCOUNT PAGE -->
+<div id="create-page" class="form-container" style="display:none;">
+    <h2>Create Account</h2>
+    <input id="new-username" class="input-field" type="text" placeholder="Choose Username">
+    <input id="new-password" class="input-field" type="password" placeholder="Choose Password (min 10 chars)">
+    <input id="confirm-password" class="input-field" type="password" placeholder="Confirm Password">
+    <button class="action-btn" onclick="createAccount()">Create Account</button>
+    <a class="link" onclick="showLogin()">Back to Login</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main-content" style="display:none;">
+    <div class="logo-container">
+        <h1 class="logo-text">SecuSuite</h1>
+    </div>
+
+    <div class="top-nav">
+        <a onclick="openPage('dashboard')">Dashboard</a>
+        <a onclick="openPage('logs')">Log Analysis</a>
+        <a onclick="openPage('monitor')">Threat Monitor</a>
+        <a onclick="openPage('settings')">Settings</a>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="page">
+        <h1>Dashboard</h1>
+        <div class="card-row">
+            <div class="card">
+                <h3>System Health</h3>
+                <p id="health-text">Good</p>
+                <div id="health-alert" class="alert good"></div>
+            </div>
+            <div class="card">
+                <h3>Active Threats</h3>
+                <p id="threat-count">0</p>
+            </div>
+            <div class="card">
+                <h3>Logs Processed</h3>
+                <p id="logs-count">0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG ANALYSIS (UPDATED) -->
+    <div id="logs" class="page">
+        <h1>Log Analysis</h1>
+
+        <a id="sample-download" href="#" onclick="downloadSample()" class="sample-link">📄 Download Sample CSV</a>
+
+        <div class="upload-area" id="upload-area">
+            <p id="upload-text">Drag & Drop files here</p>
+            <p>or</p>
+
+            <button class="action-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+            <input type="file" id="file-input" multiple>
+
+            <button id="upload-btn" class="action-btn" style="display:none;" onclick="uploadFiles()">Upload File</button>
+
+            <!-- Spinner -->
+            <div id="spinner" class="spinner" style="display:none;"></div>
+            <p id="processing-text" style="display:none;">Processing…</p>
+        </div>
+    </div>
+
+    <!-- THREAT MONITOR -->
+    <div id="monitor" class="page">
+        <h1>Threat Monitor</h1>
+        <canvas id="threatChart"></canvas>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="settings" class="page">
+        <h1>Settings</h1>
+        <p>API Key:</p>
+        <input type="text" id="api-input" placeholder="Enter your API key">
+    </div>
+</div>
+
+<!-- ABOUT US -->
+<div class="about-us" id="about-us">
+    <h3>About SecuSuite</h3>
+    <p>SecuSuite is a security monitoring platform that tracks threats and system health in real-time.</p>
+    <button onclick="closeAbout()">Close</button>
+</div>
+<button class="about-btn" onclick="showAbout()">About Us</button>
+
+<script>
+/* =========================
+   USER LOGIN
+========================= */
+let activeThreats = 0;
+let logsProcessed = 0;
+
+function showCreateAccount() {
+    document.getElementById("login-page").style.display = "none";
+    document.getElementById("create-page").style.display = "block";
+}
+function showLogin() {
+    document.getElementById("login-page").style.display = "block";
+    document.getElementById("create-page").style.display = "none";
+}
+function createAccount() {
+    const user = document.getElementById("new-username").value;
+    const pass = document.getElementById("new-password").value;
+    const confirm = document.getElementById("confirm-password").value;
+
+    if(!user || !pass || !confirm) return alert("Fill all fields!");
+    if(pass !== confirm) return alert("Passwords do not match!");
+    if(pass.length < 10 || !/[0-9]/.test(pass) || !/[A-Za-z]/.test(pass) || !/[!@#$%^&*]/.test(pass))
+        return alert("Password must be min 10 chars, alphanumeric + special characters!");
+
+    const users = JSON.parse(localStorage.getItem("users")) || {};
+    if(users[user]) return alert("Username already exists!");
+
+    users[user] = pass;
+    localStorage.setItem("users", JSON.stringify(users));
+    alert("Account created successfully!");
+    showLogin();
+}
+function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    const users = JSON.parse(localStorage.getItem("users")) || {};
+
+    if((user === "admin" && pass === "Admin123") || (users[user] && users[user] === pass)) {
+        document.getElementById("login-page").style.display = "none";
+        document.getElementById("create-page").style.display = "none";
+        document.getElementById("main-content").style.display = "block";
+        updateDashboard();
+        openPage("dashboard");
+        return;
+    }
+    alert("Invalid username or password.");
+}
+function logout() {
+    location.reload();
+}
+
+/* =========================
+   PAGE NAVIGATION
+========================= */
+function openPage(page) {
+    document.querySelectorAll(".page").forEach(p => p.style.display = "none");
+    document.getElementById(page).style.display = "block";
+    if(page === "monitor") loadGraph();
+}
+
+/* =========================
+   DASHBOARD UPDATE
+========================= */
+function updateDashboard() {
+    document.getElementById("logs-count").innerText = logsProcessed;
+    document.getElementById("threat-count").innerText = activeThreats;
+
+    const healthText = document.getElementById("health-text");
+    const healthAlert = document.getElementById("health-alert");
+
+    if(activeThreats < 5) {
+        healthText.innerText = "Good";
+        healthAlert.className = "alert good";
+    } else if(activeThreats <= 10) {
+        healthText.innerText = "Moderate";
+        healthAlert.className = "alert moderate";
+    } else {
+        healthText.innerText = "Critical";
+        healthAlert.className = "alert critical";
+    }
+}
+
+/* =========================
+   SAMPLE CSV DOWNLOAD
+========================= */
+function downloadSample() {
+    const csv = "timestamp,event,severity\n2024-01-01 12:00:00,Login success,Low\n2024-01-01 12:05:00,Unauthorized access attempt,High";
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sample_logs.csv";
+    a.click();
+}
+
+/* =========================
+   LOG UPLOAD
+========================= */
+const uploadArea = document.getElementById("upload-area");
+const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
+const spinner = document.getElementById("spinner");
+const processingText = document.getElementById("processing-text");
+
+fileInput.addEventListener("change", () => {
+    if(fileInput.files.length > 0) uploadBtn.style.display = "block";
+});
+
+function uploadFiles() {
+    if(!fileInput.files.length) return alert("No files selected!");
+
+    spinner.style.display = "block";
+    processingText.style.display = "block";
+    uploadBtn.style.display = "none";
+
+    setTimeout(() => {
+        logsProcessed += fileInput.files.length;
+        activeThreats = Math.floor(Math.random() * 15);
+        updateDashboard();
+
+        spinner.style.display = "none";
+        processingText.style.display = "none";
+
+        alert("File(s) uploaded successfully!");
+        fileInput.value = "";
+    }, 1500);
+}
+
+/* Drag & Drop Highlight */
+uploadArea.addEventListener("dragover", e => {
+    e.preventDefault();
+    uploadArea.classList.add("highlight");
+});
+uploadArea.addEventListener("dragleave", () => {
+    uploadArea.classList.remove("highlight");
+});
+uploadArea.addEventListener("drop", e => {
+    e.preventDefault();
+    uploadArea.classList.remove("highlight");
+
+    logsProcessed += e.dataTransfer.files.length;
+    activeThreats = Math.floor(Math.random() * 15);
+
+    updateDashboard();
+    alert("File(s) uploaded (drag & drop)");
+});
+
+/* =========================
+   THREAT MONITOR
+========================= */
+function loadGraph() {
+    const ctx = document.getElementById("threatChart");
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: ["1 pm","2 pm","3 pm","4 pm","5 pm"],
+            datasets: [{
+                label: "Threat Activity",
+                data: [2,6,3,7,4],
+                borderColor: "red",
+                borderWidth: 2,
+                fill: false
+            }]
+        },
+        options: { responsive:true }
+    });
+}
+
+/* =========================
+   ABOUT US
+========================= */
+function showAbout() {
+    document.getElementById("about-us").style.display = "block";
+}
+function closeAbout() {
+    document.getElementById("about-us").style.display = "none";
+}
+</script>
+
+</body>
+</html>

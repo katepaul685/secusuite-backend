@@ -1,0 +1,233 @@
+
+/* =====================================
+   GLOBAL STYLES & BACKGROUND
+===================================== */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-image: url("Background.jpg");
+    background-size: cover;
+    background-attachment: fixed;
+    color: white;
+}
+
+/* =====================================
+   LOGIN & CREATE ACCOUNT FORM
+===================================== */
+.form-container {
+    width: 330px;
+    padding: 25px;
+    background: rgba(255, 255, 255, 0.92);
+    margin: 120px auto;
+    border-radius: 10px;
+    text-align: center;
+    color: black;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+}
+
+.action-btn {
+    width: 100%;
+    padding: 12px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 17px;
+}
+
+.action-btn:hover {
+    background: #45a049;
+}
+
+.link, .small-link a {
+    margin-top: 14px;
+    display: block;
+    color: blue;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.link:hover, .small-link a:hover {
+    text-decoration: underline;
+}
+
+/* =====================================
+   LOGO & TOP NAVIGATION
+===================================== */
+.logo-container {
+    text-align: center;
+    background: rgba(0,0,0,0.95);
+    padding: 10px 0;
+}
+
+.logo-text {
+    color: white;
+    font-size: 28px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.top-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: rgba(0,0,0,0.9);
+    padding: 12px 0;
+    z-index: 1000;
+}
+
+.top-nav a, .top-nav .logout-btn {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.top-nav a:hover, .top-nav .logout-btn:hover {
+    text-decoration: underline;
+}
+
+/* =====================================
+   MAIN PAGES
+===================================== */
+.page {
+    display: none;
+    margin: 20px;
+    padding: 25px;
+    color: white;
+}
+
+/* =====================================
+   DASHBOARD CARDS
+===================================== */
+.card-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+.card {
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    border-radius: 10px;
+    width: 220px;
+    color: white;
+}
+
+/* ALERT COLORS */
+.alert {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-top: 10px;
+}
+
+.good {
+    background: green;
+}
+
+.moderate {
+    background: yellow;
+    animation: blinkModerate 1.5s infinite;
+}
+
+.critical {
+    background: red;
+    animation: blinkCritical 0.8s infinite;
+}
+
+@keyframes blinkModerate {
+    50% { opacity: 0; }
+}
+
+@keyframes blinkCritical {
+    50% { opacity: 0; }
+}
+
+/* =====================================
+   THREAT MONITOR
+===================================== */
+#threatChart {
+    background: white;
+    padding: 12px;
+    border-radius: 10px;
+    width: 600px;
+    height: 350px;
+}
+
+/* =====================================
+   LOG ANALYSIS
+===================================== */
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 20px;
+    background: rgba(255,255,255,0.1);
+    transition: background 0.2s ease;
+    color: white;
+}
+
+.upload-area:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.upload-area input[type="file"] {
+    display: none;
+}
+
+/* =====================================
+   SETTINGS
+===================================== */
+#settings input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+}
+
+/* =====================================
+   ABOUT US POPUP
+===================================== */
+.about-us {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    display: none;
+    width: 250px;
+    text-align: center;
+    z-index: 1000;
+}
+
+.about-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1001;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
