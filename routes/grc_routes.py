@@ -1,63 +1,80 @@
 from flask import Blueprint, request, jsonify
-import google.generativeai as genai
+import sys
 import os
-from models import Policy
-from database import db
-from flask_jwt_extended import jwt_required, get_jwt
+
+# --- IMPORT YOUR TEAMMATE'S AI ENGINE ---
+sys.path.append(os.getcwd()) 
+from policy_generator import generate_policy_response
 
 grc_bp = Blueprint('grc', __name__)
 
-# Configure AI
-try:
-    genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-    model = genai.GenerativeModel("gemini-1.5-flash")
-except Exception as e:
-    print(f"Error configuring AI: {e}")
-    model = None
-
-# ROUTE 1: Generate a Policy
-@grc_bp.route('/generate-policy', methods=['POST'])
-@jwt_required()  # User must be logged in
-def generate_policy():
-    
-    # RBAC Check (Disabled for Hackathon Demo)
-    # claims = get_jwt()
-    # user_role = claims.get("role")
-    # if user_role != "admin":
-    #      return jsonify({"error": "Access denied. Admin role required."}), 403
-
-    # If they are an admin, proceed...
-    data = request.json
-    description = data.get('company_description')
-    
-    if not description:
-        return jsonify({"error": "Description is required"}), 400
-    if not model:
-        return jsonify({"error": "AI Model not configured"}), 500
-
-    prompt = f"""
-    You are a GRC Expert. Write a professional cybersecurity policy 
-    for this organization: "{description}".
-    Format it cleanly in Markdown.
+def get_fallback_response(module, prompt):
     """
+    Provides a helpful template if the local AI model doesn't know the answer.
+    """
+    return f"""### 🛡️ {module} Advisor
+    
+**Note:** My specific knowledge base is currently focused on DDoS, Phishing, Ransomware, and SQL Injection. However, here is a general guide for your request:
+
+**Request:** "{prompt}"
+
+**General Best Practices for {module}:**
+1. **Assessment:** Identify the specific assets (servers, emails, data) involved.
+2. **Containment:** If this is an attack, isolate the affected systems immediately.
+3. **Recovery:** Restore from clean backups and patch the vulnerability.
+4. **Compliance:** Ensure you are logging this event for GDPR/ISO standards.
+
+*For specific technical details, please consult your organization's Security Officer.*
+"""
+
+@grc_bp.route('/generate-policy', methods=['POST'])
+def generate_policy():
+    data = request.json
+    
+    # 1. Parse the complex prompt from the frontend
+    # The frontend sends: "You are acting as a [Module] Expert... User Query: [Prompt]"
+    full_prompt = data.get('company_description', '')
+    
+    # Extract the user's actual question and the module name
+    user_real_query = ""
+    module_name = "General Security"
+    
+    if "User Query:" in full_prompt:
+        parts = full_prompt.split("User Query:")
+        context_part = parts[0]
+        user_real_query = parts[1].split("Please provide")[0].strip()
+        
+        # Try to find the module name
+        if "acting as a" in context_part:
+            module_name = context_part.split("acting as a")[1].split("Expert")[0].strip()
+    else:
+        user_real_query = full_prompt
+
+    if not user_real_query:
+        return jsonify({"error": "Please describe your issue."}), 400
 
     try:
-        response = model.generate_content(prompt)
-        policy_text = response.text
+        # 2. Try the Teammate's AI Model first
+        response_text, policy_data, response_type = generate_policy_response(user_real_query)
         
-        # Save to Database
-        new_policy = Policy(title="AI Generated Policy", content=policy_text)
-        db.session.add(new_policy)
-        db.session.commit()
+        # 3. Check if it failed (The model returns a specific "I couldn't find..." string)
+        if "I couldn't find specific information" in response_text:
+            # Use our fallback logic instead of showing an error
+            response_text = get_fallback_response(module_name, user_real_query)
+            response_type = "general_advice"
 
-        return jsonify(new_policy.to_dict()), 201
+        # 4. Send back the best answer we have
+        return jsonify({
+            "content": response_text,
+            "structured_data": policy_data,
+            "type": response_type
+        }), 200
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# ROUTE 2: Get All Policies
-@grc_bp.route('/policies', methods=['GET'])
-@jwt_required() # User must be logged in
-def get_policies():
-    policies = Policy.query.order_by(Policy.created_at.desc()).all()
-    return jsonify([p.to_dict() for p in policies])
+        print(f"AI Error: {e}")
+        # Even if it crashes, give a safe fallback
+        fallback = get_fallback_response(module_name, user_real_query)
+        return jsonify({
+            "content": fallback, 
+            "type": "error_fallback"
+        }), 200

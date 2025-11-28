@@ -2,15 +2,297 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>SecuSuite Platform</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecuSuite</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* =====================================
+           GLOBAL STYLES & BACKGROUND
+        ===================================== */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-image: url("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop");
+            background-size: cover;
+            background-attachment: fixed;
+            background-position: center;
+            color: white;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); 
+            z-index: -1;
+        }
+
+        /* =====================================
+           LOGIN & CREATE ACCOUNT FORM
+        ===================================== */
+        .form-container {
+            width: 330px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 100px auto;
+            border-radius: 10px;
+            text-align: center;
+            color: black;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .input-field {
+            width: 90%; 
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .action-btn:hover {
+            background: #45a049;
+        }
+
+        .link {
+            margin-top: 15px;
+            display: block;
+            color: #0056b3;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        /* =====================================
+           LOGO & TOP NAVIGATION
+        ===================================== */
+        .logo-container {
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 20px 0;
+            border-bottom: 1px solid #444;
+        }
+
+        .logo-text {
+            color: #4CAF50;
+            font-size: 36px;
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .top-nav {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            background: rgba(0,0,0,0.9);
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .top-nav a, .top-nav .logout-btn {
+            color: #ddd;
+            text-decoration: none;
+            font-size: 16px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px 12px;
+            transition: all 0.3s;
+            border-radius: 4px;
+        }
+
+        .top-nav a:hover, .top-nav .logout-btn:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .logout-btn {
+            color: #ff6b6b !important;
+            font-weight: bold;
+        }
+
+        /* =====================================
+           MAIN PAGES
+        ===================================== */
+        .page {
+            display: none;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 30px;
+            background: rgba(30, 30, 30, 0.85);
+            border-radius: 12px;
+            color: white;
+            box-shadow: 0 0 25px rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            border-bottom: 1px solid #555;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 2em;
+            color: #4CAF50;
+        }
+
+        /* =====================================
+           DASHBOARD CARDS
+        ===================================== */
+        .card-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 250px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .card h3 { margin-top: 0; color: #aaa; font-size: 1.1em; text-transform: uppercase; letter-spacing: 1px; }
+        .card p { font-size: 3em; margin: 15px 0; font-weight: bold; }
+
+        /* ALERT COLORS */
+        .alert {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin: 10px auto 0;
+            display: inline-block;
+        }
+
+        .good { background: #00ff00; box-shadow: 0 0 15px #00ff00; }
+        .moderate { background: yellow; box-shadow: 0 0 15px yellow; animation: blinkModerate 1.5s infinite; }
+        .critical { background: red; box-shadow: 0 0 15px red; animation: blinkCritical 0.8s infinite; }
+
+        @keyframes blinkModerate { 50% { opacity: 0.5; } }
+        @keyframes blinkCritical { 50% { opacity: 0.5; } }
+
+        /* =====================================
+           THREAT MONITOR
+        ===================================== */
+        #threatChart {
+            background: rgba(255,255,255,0.95);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+            height: 400px;
+        }
+
+        /* =====================================
+           LOG ANALYSIS
+        ===================================== */
+        .upload-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 20px;
+            background: rgba(0,0,0,0.2);
+            transition: background 0.3s ease;
+        }
+
+        .upload-area:hover {
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .upload-area p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        /* =====================================
+           ABOUT US POPUP
+        ===================================== */
+        .about-us {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+            width: 350px; /* Widened for better text fit */
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            border: 1px solid #4CAF50;
+        }
+
+        .about-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+        
+        /* New Dropdown Style */
+        #module-select {
+            padding: 10px;
+            width: 100%;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            background: #222;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
 
 <!-- LOGIN PAGE -->
 <div id="login-page" class="form-container">
-    <h2>Login</h2>
+    <h2 style="color: #4CAF50; margin-bottom: 20px;">SecuSuite Login</h2>
     <input id="username" class="input-field" type="text" placeholder="Username">
     <input id="password" class="input-field" type="password" placeholder="Password">
     <button class="action-btn" onclick="login()">Login</button>
@@ -19,35 +301,38 @@
 
 <!-- CREATE ACCOUNT PAGE -->
 <div id="create-page" class="form-container" style="display:none;">
-    <h2>Create Account</h2>
+    <h2 style="color: #4CAF50; margin-bottom: 20px;">Create Account</h2>
     <input id="new-username" class="input-field" type="text" placeholder="Choose Username">
     <input id="new-password" class="input-field" type="password" placeholder="Choose Password (min 10 chars)">
     <input id="confirm-password" class="input-field" type="password" placeholder="Confirm Password">
-    <button class="action-btn" onclick="createAccount()">Create Account</button>
+    <button class="action-btn" onclick="createAccount()">Sign Up</button>
     <a class="link" onclick="showLogin()">Back to Login</a>
 </div>
 
-<!-- MAIN CONTENT -->
+<!-- MAIN APPLICATION CONTENT -->
 <div id="main-content" style="display:none;">
     <div class="logo-container">
         <h1 class="logo-text">SecuSuite</h1>
+        <p style="margin:0; font-size:14px; color:#aaa;">AI-Powered Security & Compliance</p>
     </div>
 
     <div class="top-nav">
         <a onclick="openPage('dashboard')">Dashboard</a>
-        <a onclick="openPage('logs')">Log Analysis</a>
+        <!-- Updated to simply "Log Analysis" -->
+        <a onclick="openPage('logs')">Log Analysis</a> 
         <a onclick="openPage('monitor')">Threat Monitor</a>
+        <a onclick="openPage('grc')">AI Security Copilot</a> 
         <a onclick="openPage('settings')">Settings</a>
         <button class="logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <!-- DASHBOARD -->
     <div id="dashboard" class="page">
-        <h1>Dashboard</h1>
+        <h1>Dashboard Overview</h1>
         <div class="card-row">
             <div class="card">
                 <h3>System Health</h3>
-                <p id="health-text">Good</p>
+                <p id="health-text" style="color: #00ff00;">Good</p>
                 <div id="health-alert" class="alert good"></div>
             </div>
             <div class="card">
@@ -61,56 +346,90 @@
         </div>
     </div>
 
-    <!-- LOG ANALYSIS (UPDATED) -->
+    <!-- LOG ANALYSIS -->
     <div id="logs" class="page">
         <h1>Log Analysis</h1>
-
-        <a id="sample-download" href="#" onclick="downloadSample()" class="sample-link">📄 Download Sample CSV</a>
-
+        <!-- Text updated to clarify it handles both Network and Email logs -->
+        <p>Upload <strong>Server Logs</strong> or <strong>Email Headers</strong> for automated AI threat detection.</p>
         <div class="upload-area" id="upload-area">
-            <p id="upload-text">Drag & Drop files here</p>
-            <p>or</p>
-
-            <button class="action-btn" onclick="document.getElementById('file-input').click()">Choose File</button>
+            <p>Drag & Drop files here</p>
+            <p style="color: #aaa; font-size: 0.9em;">(Supports .txt, .log, .csv)</p>
+            <button class="action-btn" style="width: auto; padding: 10px 40px;" onclick="document.getElementById('file-input').click()">Choose File</button>
             <input type="file" id="file-input" multiple>
-
-            <button id="upload-btn" class="action-btn" style="display:none;" onclick="uploadFiles()">Upload File</button>
-
-            <!-- Spinner -->
-            <div id="spinner" class="spinner" style="display:none;"></div>
-            <p id="processing-text" style="display:none;">Processing…</p>
+            <br><br>
+            <button id="upload-btn" class="action-btn" style="display:none; width: auto; background: #2196F3;" onclick="uploadFiles()">Start Analysis</button>
         </div>
     </div>
 
     <!-- THREAT MONITOR -->
     <div id="monitor" class="page">
-        <h1>Threat Monitor</h1>
+        <h1>Real-Time Threat Monitor</h1>
         <canvas id="threatChart"></canvas>
+    </div>
+
+    <!-- GRC AI MODULE (UPDATED) -->
+    <div id="grc" class="page">
+        <h1>AI Security Copilot 🤖</h1>
+        <p>Select a specific module to get expert advice, templates, and recovery steps.</p>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px; margin-top: 20px;">
+            <label for="module-select" style="font-weight: bold; display: block; margin-bottom: 5px;">Select Expert Module:</label>
+            <select id="module-select">
+                <option value="General Security">🛡️ General Security (Explain attacks & concepts)</option>
+                <option value="Email Security">📧 Email Security (Phishing, Spoofing, Headers)</option>
+                <option value="GRC & Policy">📜 GRC & Compliance (Generate Policies, ISO Standards)</option>
+                <option value="Cloud Security">☁️ Cloud Security (AWS/Azure Configurations)</option>
+                <option value="Incident Response">🚨 Incident Response (Recovery Plans & Report Templates)</option>
+            </select>
+
+            <textarea id="policy-prompt" rows="5" style="width: 95%; padding: 15px; font-size: 16px; border-radius: 6px; border: 1px solid #555; background: #222; color: white;" placeholder="Describe your issue, attack, or the document you need..."></textarea>
+            <br><br>
+            <button class="action-btn" style="width: auto; padding: 12px 30px;" onclick="generatePolicy()">Ask Copilot</button>
+        </div>
+
+        <div id="policy-result" style="display:none; margin-top: 30px; background: white; color: #333; padding: 30px; border-radius: 10px; white-space: pre-wrap; line-height: 1.6; box-shadow: 0 5px 20px rgba(0,0,0,0.5);">
+            <!-- AI text appears here -->
+        </div>
     </div>
 
     <!-- SETTINGS -->
     <div id="settings" class="page">
         <h1>Settings</h1>
-        <p>API Key:</p>
-        <input type="text" id="api-input" placeholder="Enter your API key">
+        <p>System Configuration:</p>
+        <div style="background: rgba(255,255,255,0.1); padding: 25px; border-radius: 10px;">
+            <h3>System Status</h3>
+            <div style="margin-top: 20px; font-size: 1.1em;">
+                <p><strong>AI Engine:</strong> <span style="color:#00ff00">Google Gemini 1.5 Flash (Active)</span></p>
+                <p><strong>Database:</strong> <span style="color:#00ff00">SQLite (Connected)</span></p>
+                <p><strong>Backend API:</strong> <span style="color:#00ff00">Online (Port 5000)</span></p>
+            </div>
+            <hr style="border-color: #555; margin: 20px 0;">
+            <p style="font-size: 0.9em; color: #aaa;">API Keys are managed securely via server-side environment variables.</p>
+        </div>
     </div>
 </div>
 
-<!-- ABOUT US -->
+<!-- ABOUT US POPUP (UPDATED) -->
 <div class="about-us" id="about-us">
-    <h3>About SecuSuite</h3>
-    <p>SecuSuite is a security monitoring platform that tracks threats and system health in real-time.</p>
-    <button onclick="closeAbout()">Close</button>
+    <h3 style="color: #4CAF50;">About SecuSuite</h3>
+    <p>SecuSuite is an AI-powered platform meant to help cybersecurity professionals intelligently analyze attacks, automate compliance, and strengthen digital resilience.</p>
+    <button class="action-btn" style="width: auto; padding: 5px 20px; margin-top: 15px; background: #333; border: 1px solid #555;" onclick="closeAbout()">Close</button>
 </div>
-<button class="about-btn" onclick="showAbout()">About Us</button>
+<button class="about-btn" onclick="showAbout()">About</button>
 
+<!-- JAVASCRIPT LOGIC -->
 <script>
 /* =========================
-   USER LOGIN
+   BACKEND CONNECTION (API)
 ========================= */
+const API_URL = "http://127.0.0.1:5000/api";
+
 let activeThreats = 0;
 let logsProcessed = 0;
 
+/* =========================
+   USER LOGIN / ACCOUNT
+========================= */
 function showCreateAccount() {
     document.getElementById("login-page").style.display = "none";
     document.getElementById("create-page").style.display = "block";
@@ -119,40 +438,67 @@ function showLogin() {
     document.getElementById("login-page").style.display = "block";
     document.getElementById("create-page").style.display = "none";
 }
-function createAccount() {
+
+// 1. CREATE ACCOUNT
+async function createAccount() {
     const user = document.getElementById("new-username").value;
     const pass = document.getElementById("new-password").value;
     const confirm = document.getElementById("confirm-password").value;
 
-    if(!user || !pass || !confirm) return alert("Fill all fields!");
     if(pass !== confirm) return alert("Passwords do not match!");
-    if(pass.length < 10 || !/[0-9]/.test(pass) || !/[A-Za-z]/.test(pass) || !/[!@#$%^&*]/.test(pass))
-        return alert("Password must be min 10 chars, alphanumeric + special characters!");
 
-    const users = JSON.parse(localStorage.getItem("users")) || {};
-    if(users[user]) return alert("Username already exists!");
-
-    users[user] = pass;
-    localStorage.setItem("users", JSON.stringify(users));
-    alert("Account created successfully!");
-    showLogin();
+    try {
+        const response = await fetch(`${API_URL}/auth/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert("Account created! Please login.");
+            showLogin();
+        } else {
+            alert("Error: " + (data.error || "Unknown error"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Server connection failed. Is python running?");
+    }
 }
-function login() {
+
+// 2. LOGIN
+async function login() {
     const user = document.getElementById("username").value;
     const pass = document.getElementById("password").value;
-    const users = JSON.parse(localStorage.getItem("users")) || {};
 
-    if((user === "admin" && pass === "Admin123") || (users[user] && users[user] === pass)) {
-        document.getElementById("login-page").style.display = "none";
-        document.getElementById("create-page").style.display = "none";
-        document.getElementById("main-content").style.display = "block";
-        updateDashboard();
-        openPage("dashboard");
-        return;
+    try {
+        const response = await fetch(`${API_URL}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            console.log("Login successful! Token:", data.token); // Debug Log
+            localStorage.setItem("token", data.token); // Save Token
+            document.getElementById("login-page").style.display = "none";
+            document.getElementById("create-page").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+            updateDashboard();
+            openPage("dashboard");
+        } else {
+            alert(data.error || "Login failed");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Server connection failed. Is python running?");
     }
-    alert("Invalid username or password.");
 }
+
 function logout() {
+    localStorage.removeItem("token");
     location.reload();
 }
 
@@ -177,112 +523,208 @@ function updateDashboard() {
 
     if(activeThreats < 5) {
         healthText.innerText = "Good";
+        healthText.style.color = "#00ff00";
         healthAlert.className = "alert good";
     } else if(activeThreats <= 10) {
         healthText.innerText = "Moderate";
+        healthText.style.color = "yellow";
         healthAlert.className = "alert moderate";
     } else {
         healthText.innerText = "Critical";
+        healthText.style.color = "red";
         healthAlert.className = "alert critical";
     }
 }
 
 /* =========================
-   SAMPLE CSV DOWNLOAD
-========================= */
-function downloadSample() {
-    const csv = "timestamp,event,severity\n2024-01-01 12:00:00,Login success,Low\n2024-01-01 12:05:00,Unauthorized access attempt,High";
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "sample_logs.csv";
-    a.click();
-}
-
-/* =========================
-   LOG UPLOAD
+   LOG ANALYSIS (FILE UPLOAD)
 ========================= */
 const uploadArea = document.getElementById("upload-area");
 const fileInput = document.getElementById("file-input");
 const uploadBtn = document.getElementById("upload-btn");
-const spinner = document.getElementById("spinner");
-const processingText = document.getElementById("processing-text");
 
 fileInput.addEventListener("change", () => {
-    if(fileInput.files.length > 0) uploadBtn.style.display = "block";
+    if(fileInput.files.length > 0) uploadBtn.style.display = "inline-block";
 });
 
-function uploadFiles() {
-    if(!fileInput.files.length) return alert("No files selected!");
+// 3. UPLOAD FILES
+async function uploadFiles() {
+    const files = fileInput.files;
+    if(!files.length) return alert("No files selected!");
 
-    spinner.style.display = "block";
-    processingText.style.display = "block";
-    uploadBtn.style.display = "none";
+    const formData = new FormData();
+    formData.append("file", files[0]);
 
-    setTimeout(() => {
-        logsProcessed += fileInput.files.length;
-        activeThreats = Math.floor(Math.random() * 15);
-        updateDashboard();
+    // Show loading state
+    uploadBtn.innerText = "Analyzing...";
+    uploadBtn.disabled = true;
 
-        spinner.style.display = "none";
-        processingText.style.display = "none";
+    try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_URL}/logs/upload`, {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${token}` },
+            body: formData
+        });
 
-        alert("File(s) uploaded successfully!");
-        fileInput.value = "";
-    }, 1500);
+        const result = await response.json();
+        
+        if(response.ok) {
+            activeThreats = result.data.threats;
+            logsProcessed += 1;
+            updateDashboard();
+            
+            // Show dynamic message depending on type (Network vs Email)
+            const type = result.data.type || "System";
+            alert(`Analysis Complete!\nType: ${type}\nStatus: ${result.data.status}`);
+            
+            fileInput.value = "";
+            uploadBtn.style.display = "none";
+        } else {
+            alert("Upload failed: " + result.error);
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Upload error.");
+    } finally {
+        uploadBtn.innerText = "Start Analysis";
+        uploadBtn.disabled = false;
+    }
 }
 
-/* Drag & Drop Highlight */
+/* Drag & Drop */
 uploadArea.addEventListener("dragover", e => {
     e.preventDefault();
-    uploadArea.classList.add("highlight");
+    uploadArea.style.background = "rgba(76, 175, 80, 0.2)";
 });
-uploadArea.addEventListener("dragleave", () => {
-    uploadArea.classList.remove("highlight");
+uploadArea.addEventListener("dragleave", e => {
+    uploadArea.style.background = "rgba(0,0,0,0.2)";
 });
 uploadArea.addEventListener("drop", e => {
     e.preventDefault();
-    uploadArea.classList.remove("highlight");
-
-    logsProcessed += e.dataTransfer.files.length;
-    activeThreats = Math.floor(Math.random() * 15);
-
-    updateDashboard();
-    alert("File(s) uploaded (drag & drop)");
+    uploadArea.style.background = "rgba(0,0,0,0.2)";
+    fileInput.files = e.dataTransfer.files; 
+    if(fileInput.files.length > 0) uploadBtn.style.display = "inline-block";
 });
+
+/* =========================
+   AI POLICY GENERATION
+========================= */
+// 4. GENERATE POLICY
+async function generatePolicy() {
+    const module = document.getElementById("module-select").value;
+    const prompt = document.getElementById("policy-prompt").value;
+    const resultBox = document.getElementById("policy-result");
+    
+    // 1. Check if user typed anything
+    if(!prompt) return alert("Please describe your company/issue first.");
+
+    // 2. Check if user is logged in
+    const token = localStorage.getItem("token");
+    if (!token) {
+        alert("You are not logged in! Please login first.");
+        showLogin();
+        return;
+    }
+
+    // 3. Construct the "Smart Prompt"
+    const smartPrompt = `You are acting as a ${module} Expert for SecuSuite. 
+    User Query: ${prompt}
+    
+    Please provide a structured response with these sections:
+    1. **Explanation & Context:** Explain the attack/concept clearly (Knowledge Base).
+    2. **Immediate Actions/Recovery:** Step-by-step recovery guide.
+    3. **Standards & Compliance:** Cite relevant standards (ISO 27001, NIST, GDPR).
+    4. **Templates:** Provide a basic report template or policy text if applicable.
+    
+    Format the response clearly using Markdown.`;
+
+    // 4. Show Loading State
+    resultBox.style.display = "block";
+    resultBox.innerText = `Consulting the ${module} Copilot... please wait...`;
+
+    try {
+        console.log("Sending request to AI with token:", token); 
+
+        const response = await fetch(`${API_URL}/grc/generate-policy`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}` 
+            },
+            body: JSON.stringify({ company_description: smartPrompt })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Success! Display the policy text
+            const policyText = data.content || data.policy || "Response generated successfully.";
+            // Format newlines to HTML breaks for readability
+            const formattedText = policyText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            resultBox.innerHTML = `<h3>${module} Analysis</h3><hr>${formattedText}`;
+
+            // *** NEW: Check for Structured Policy (JSON) from Local AI ***
+            if (data.structured_data) {
+                const jsonString = JSON.stringify(data.structured_data, null, 2);
+                resultBox.innerHTML += `<br><br><strong>Structured Policy (JSON):</strong><pre style="background: #222; padding: 10px; border-radius: 5px; overflow-x: auto; color: #00ff00;">${jsonString}</pre>`;
+            }
+
+        } else {
+            // Backend returned an error
+            console.error("Backend Error:", data);
+            resultBox.innerText = `Error: ${data.error || "AI failed to respond"} (Status: ${response.status})`;
+            
+            if (response.status === 401 || response.status === 422) {
+                alert("Your session expired. Please login again.");
+                logout();
+            }
+        }
+    } catch (error) {
+        console.error("Network Error:", error);
+        resultBox.innerText = "Connection failed. Is the Python backend running?";
+    }
+}
 
 /* =========================
    THREAT MONITOR
 ========================= */
 function loadGraph() {
     const ctx = document.getElementById("threatChart");
-    new Chart(ctx, {
+    if (window.myChart) window.myChart.destroy();
+    
+    window.myChart = new Chart(ctx, {
         type: "line",
         data: {
             labels: ["1 pm","2 pm","3 pm","4 pm","5 pm"],
             datasets: [{
                 label: "Threat Activity",
                 data: [2,6,3,7,4],
-                borderColor: "red",
+                borderColor: "#4CAF50",
+                backgroundColor: "rgba(76, 175, 80, 0.2)",
                 borderWidth: 2,
-                fill: false
+                fill: true,
+                tension: 0.4
             }]
         },
-        options: { responsive:true }
+        options: { 
+            responsive:true,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#444' } },
+                x: { grid: { color: '#444' } }
+            },
+            plugins: {
+                legend: { labels: { color: 'white' } }
+            }
+        }
     });
 }
 
 /* =========================
-   ABOUT US
+   ABOUT US POPUP
 ========================= */
-function showAbout() {
-    document.getElementById("about-us").style.display = "block";
-}
-function closeAbout() {
-    document.getElementById("about-us").style.display = "none";
-}
+function showAbout() { document.getElementById("about-us").style.display = "block"; }
+function closeAbout() { document.getElementById("about-us").style.display = "none"; }
 </script>
 
 </body>
