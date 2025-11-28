@@ -27,11 +27,11 @@ Core
 
 Python 
 
-FastAPI / Flask (depending on your setup)
+Flask
 
 Machine Learning Models (Python-based)
 
-SQLite / PostgreSQL (as applicable)
+SQLite / PostgreSQL
 
 
 AI/ML
